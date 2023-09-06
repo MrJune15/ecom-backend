@@ -1,7 +1,6 @@
 package com.scaler.backend.demo.services.product;
 
 import com.scaler.backend.demo.dtos.GenericProductDTO;
-import com.scaler.backend.demo.models.Product;
 
 import java.util.List;
 
@@ -12,7 +11,7 @@ public interface ProductService {
 
     GenericProductDTO deleteProductById(Long id);
 
-    GenericProductDTO updateProductById(Long id);
+    GenericProductDTO updateProductById(Long id,GenericProductDTO payload);
 
     List<GenericProductDTO> getProducts();
 }

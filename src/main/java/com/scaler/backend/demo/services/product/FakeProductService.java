@@ -5,8 +5,11 @@ import com.scaler.backend.demo.dtos.GenericProductDTO;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RequestCallback;
+import org.springframework.web.client.ResponseExtractor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,8 +18,10 @@ import java.util.List;
 @Service
 public class FakeProductService implements ProductService {
 
-    private final String getProductRequestUrl = "https://fakestoreapi.com/products/{id}";
+
     private final String productsUrl = "https://fakestoreapi.com/products";
+
+    private final String getProductRequestUrl = productsUrl + "/{id}";
 
     @NonNull
     private RestTemplateBuilder restTemplateBuilder;
@@ -36,15 +41,31 @@ public class FakeProductService implements ProductService {
         return result;
     }
 
+    private GenericProductDTO fromFakeStoreProductDTO(FakeStoreProductDTO data) {
+        GenericProductDTO result = new GenericProductDTO();
+        result.setImage(data.getImage());
+        result.setDescription(data.getDescription());
+        result.setTitle(data.getTitle());
+        result.setPrice(data.getPrice());
+        result.setCategory(data.getCategory());
+        return result;
+    }
+
     @Override
     public GenericProductDTO createProduct(GenericProductDTO payload) {
-        return restTemplateBuilder
+        FakeStoreProductDTO body = restTemplateBuilder
                 .build()
                 .postForEntity(
                         productsUrl,
                         payload,
-                        GenericProductDTO.class
+                        FakeStoreProductDTO.class
                 ).getBody();
+
+        if (body == null) {
+            return null;
+        }
+
+        return fromFakeStoreProductDTO(body);
     }
 
     @Override
@@ -54,9 +75,19 @@ public class FakeProductService implements ProductService {
     }
 
     @Override
-    public GenericProductDTO updateProductById(Long id) {
+    public GenericProductDTO updateProductById(Long id, GenericProductDTO payload) {
+
+        RequestCallback requestCallback = restTemplateBuilder.build().acceptHeaderRequestCallback(FakeStoreProductDTO.class);
+        ResponseExtractor<ResponseEntity<FakeStoreProductDTO>> responseExtractor = restTemplateBuilder.build().responseEntityExtractor(FakeStoreProductDTO.class);
+        ResponseEntity<FakeStoreProductDTO> response = restTemplateBuilder.build().execute(productsUrl, HttpMethod.PUT, requestCallback, responseExtractor, payload, id);
+
+        if (response != null && response.getBody() != null) {
+            return fromFakeStoreProductDTO(response.getBody());
+        }
+
         return null;
     }
+
 
     @Override
     public List<GenericProductDTO> getProducts() {
@@ -65,13 +96,7 @@ public class FakeProductService implements ProductService {
 
         if (response.getBody() != null) {
             for (FakeStoreProductDTO each : response.getBody()) {
-                GenericProductDTO result = new GenericProductDTO();
-                result.setImage(each.getImage());
-                result.setDescription(each.getDescription());
-                result.setTitle(each.getTitle());
-                result.setPrice(each.getPrice());
-                result.setCategory(each.getCategory());
-                list.add(result);
+                list.add(fromFakeStoreProductDTO(each));
             }
         }
         return list;
