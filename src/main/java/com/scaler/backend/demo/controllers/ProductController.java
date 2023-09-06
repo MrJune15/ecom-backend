@@ -6,6 +6,8 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/products")
 @RequiredArgsConstructor
@@ -18,6 +20,11 @@ public class ProductController {
     @GetMapping("{id}")
     public GenericProductDTO getProductById(@PathVariable("id") Long id) {
         return productService.getProductById(id);
+    }
+
+    @GetMapping
+    public List<GenericProductDTO> getProductS() {
+        return productService.getProducts();
     }
 
     @PostMapping
