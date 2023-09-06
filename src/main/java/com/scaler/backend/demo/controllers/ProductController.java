@@ -1,44 +1,42 @@
 package com.scaler.backend.demo.controllers;
 
 import com.scaler.backend.demo.dtos.GenericProductDTO;
+import com.scaler.backend.demo.exceptions.NotFoundException;
 import com.scaler.backend.demo.services.product.ProductService;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/products")
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class ProductController {
 
-    @NonNull
     private ProductService productService;
 
-
     @GetMapping("{id}")
-    public GenericProductDTO getProductById(@PathVariable("id") Long id) {
+    public GenericProductDTO getProductById(@PathVariable("id") Long id) throws NotFoundException {
         return productService.getProductById(id);
     }
 
     @GetMapping
-    public List<GenericProductDTO> getProductS() {
+    public List<GenericProductDTO> getProductS() throws NotFoundException {
         return productService.getProducts();
     }
 
     @PutMapping("{id}")
-    public GenericProductDTO updateProduct(@PathVariable("id") Long id, @RequestBody GenericProductDTO body) {
+    public GenericProductDTO updateProduct(@PathVariable("id") Long id, @RequestBody GenericProductDTO body) throws NotFoundException {
         return productService.updateProductById(id, body);
     }
 
     @PostMapping
-    public GenericProductDTO createProduct(@RequestBody GenericProductDTO body) {
+    public GenericProductDTO createProduct(@RequestBody GenericProductDTO body) throws NotFoundException {
         return productService.createProduct(body);
     }
 
     @DeleteMapping("{id}")
-    public GenericProductDTO deleteProductById(@PathVariable("id") Long id) {
+    public GenericProductDTO deleteProductById(@PathVariable("id") Long id) throws NotFoundException {
         return productService.deleteProductById(id);
     }
 }
