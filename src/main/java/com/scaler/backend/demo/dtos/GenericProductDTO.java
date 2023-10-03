@@ -1,10 +1,8 @@
 package com.scaler.backend.demo.dtos;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
 public class GenericProductDTO {
     private Long id;
     private String title;

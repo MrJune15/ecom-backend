@@ -39,4 +39,9 @@ public class ProductController {
     public GenericProductDTO deleteProductById(@PathVariable("id") Long id) throws NotFoundException {
         return productService.deleteProductById(id);
     }
+
+    @GetMapping("/category/{category}")
+    public List<GenericProductDTO> getProductsByCategory(@PathVariable String category) throws NotFoundException {
+        return productService.getProductsByCategory(category);
+    }
 }

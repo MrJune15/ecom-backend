@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RequestCallback;
 import org.springframework.web.client.ResponseExtractor;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,14 +23,16 @@ public class FakeProductService implements ProductService {
 
     private final String productsUrl = "https://fakestoreapi.com/products";
 
-    private final String getProductRequestUrl = productsUrl + "/{id}";
+    private final String productsDetailUrl = productsUrl + "/{id}";
+    private final String productsCategoryUrl = productsUrl + "/category/{category}";
+
 
     @NonNull
     private RestTemplateBuilder restTemplateBuilder;
 
     @Override
     public GenericProductDTO getProductById(Long id) throws NotFoundException {
-        FakeStoreProductDTO body = restTemplateBuilder.build().getForEntity(getProductRequestUrl, FakeStoreProductDTO.class, id).getBody();
+        FakeStoreProductDTO body = restTemplateBuilder.build().getForEntity(productsDetailUrl, FakeStoreProductDTO.class, id).getBody();
         if (body == null) {
             throw new NotFoundException("Didn't find any product with ID : " + id);
         }
@@ -74,10 +77,10 @@ public class FakeProductService implements ProductService {
 
     @Override
     public GenericProductDTO deleteProductById(Long id) throws NotFoundException {
-        restTemplateBuilder.build().delete(getProductRequestUrl, id);
-        RequestCallback requestCallback = restTemplateBuilder.build().acceptHeaderRequestCallback(FakeStoreProductDTO.class);
-        ResponseExtractor<ResponseEntity<FakeStoreProductDTO>> responseExtractor = restTemplateBuilder.build().responseEntityExtractor(FakeStoreProductDTO.class);
-        ResponseEntity<FakeStoreProductDTO> response = restTemplateBuilder.build().execute(productsUrl, HttpMethod.DELETE, requestCallback, responseExtractor, id);
+        RestTemplate restTemplate = restTemplateBuilder.build();
+        RequestCallback requestCallback = restTemplate.acceptHeaderRequestCallback(FakeStoreProductDTO.class);
+        ResponseExtractor<ResponseEntity<FakeStoreProductDTO>> responseExtractor = restTemplate.responseEntityExtractor(FakeStoreProductDTO.class);
+        ResponseEntity<FakeStoreProductDTO> response = restTemplate.execute(productsDetailUrl, HttpMethod.DELETE, requestCallback, responseExtractor, id);
 
         if (response == null || response.getBody() == null) {
             throw new NotFoundException("Didn't find any product with ID : " + id + " to delete.");
@@ -89,11 +92,18 @@ public class FakeProductService implements ProductService {
 
     @Override
     public GenericProductDTO updateProductById(Long id, GenericProductDTO payload) throws NotFoundException {
+        RestTemplate restTemplate = restTemplateBuilder.build();
+        RequestCallback requestCallback = restTemplate.httpEntityCallback(payload, GenericProductDTO.class);
+        ResponseExtractor<ResponseEntity<FakeStoreProductDTO>> responseExtractor = restTemplate.responseEntityExtractor(FakeStoreProductDTO.class);
 
-        RequestCallback requestCallback = restTemplateBuilder.build().acceptHeaderRequestCallback(FakeStoreProductDTO.class);
-        ResponseExtractor<ResponseEntity<FakeStoreProductDTO>> responseExtractor = restTemplateBuilder.build().responseEntityExtractor(FakeStoreProductDTO.class);
-        ResponseEntity<FakeStoreProductDTO> response = restTemplateBuilder.build().execute(productsUrl, HttpMethod.PUT, requestCallback, responseExtractor, fromGenericProductDTO(payload), id);
-
+        ResponseEntity<FakeStoreProductDTO> response = restTemplate
+                .execute(
+                        productsDetailUrl,
+                        HttpMethod.PUT,
+                        requestCallback,
+                        responseExtractor,
+                        id
+                );
         if (response == null || response.getBody() == null) {
             throw new NotFoundException("Didn't find any product with ID : " + id + " to update.");
         }
@@ -111,6 +121,22 @@ public class FakeProductService implements ProductService {
         }
         List<GenericProductDTO> list = new ArrayList<>();
         for (FakeStoreProductDTO each : response.getBody()) {
+            list.add(fromFakeStoreProductDTO(each));
+        }
+        return list;
+    }
+
+    @Override
+    public List<GenericProductDTO> getProductsByCategory(String category) throws NotFoundException {
+
+        ResponseEntity<FakeStoreProductDTO[]> responseEntity = restTemplateBuilder.build().getForEntity(productsCategoryUrl, FakeStoreProductDTO[].class, category);
+
+        if (responseEntity.getBody() == null) {
+            throw new NotFoundException("Not products available for the category : " + category);
+        }
+        List<GenericProductDTO> list = new ArrayList<>();
+
+        for (FakeStoreProductDTO each : responseEntity.getBody()) {
             list.add(fromFakeStoreProductDTO(each));
         }
         return list;

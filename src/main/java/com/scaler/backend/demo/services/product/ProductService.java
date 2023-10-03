@@ -12,7 +12,9 @@ public interface ProductService {
 
     GenericProductDTO deleteProductById(Long id) throws NotFoundException;
 
-    GenericProductDTO updateProductById(Long id,GenericProductDTO payload) throws NotFoundException;
+    GenericProductDTO updateProductById(Long id, GenericProductDTO payload) throws NotFoundException;
 
     List<GenericProductDTO> getProducts() throws NotFoundException;
+
+    List<GenericProductDTO> getProductsByCategory(String category) throws NotFoundException;
 }
